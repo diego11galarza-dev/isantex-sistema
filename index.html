@@ -1820,6 +1820,15 @@
     }
   }
 
+  // Definición anticipada para que esté disponible al cargar
+  if(typeof showScreen === 'undefined') {
+    window.showScreen = function(id){
+      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+      var el=document.getElementById('screen-'+id);
+      if(el) el.classList.add('active');
+    };
+  }
+
   async function cargarDatos() {
     try {
       var nombres = ['pedidos','mensajes','compras','cobros','maquila','bordados','cuentas','caja_bancos'];
@@ -8462,7 +8471,7 @@ window.xlRenderCxc = function(){
       xlCellDate(c.vence)+
       '<td style="text-align:right;padding:0 8px;font-size:11px;font-weight:700;color:'+(c.tipo==='cxc'?'var(--green)':'var(--red)')+';border:0.5px solid var(--border)">$'+(c.monto||0).toFixed(2)+'</td>'+
       '<td style="padding:0 7px;border:0.5px solid var(--border)">'+xlPill(estaVencida?'Vencido':(c.estado||'Abierto'))+'</td>'+
-      '<td style="padding:5px 8px;border:0.5px solid var(--border)"><button class="btn-p" style="font-size:9px;padding:3px 9px" onclick="xlCobrarCxc(''+c.id+'',''+c.tipo+'','+c.monto+')">'+(c.tipo==='cxc'?'✓ Cobrar':'✓ Pagar')+'</button></td>'+
+      '<td style="padding:5px 8px;border:0.5px solid var(--border)"><button class="btn-p" style="font-size:9px;padding:3px 9px" onclick="xlCobrarCxc(this,'+JSON.stringify(c.monto)+')" data-id="'+c.id+'" data-tipo="'+c.tipo+'">'+(c.tipo==='cxc'?'✓ Cobrar':'✓ Pagar')+'</button></td>'+
     '</tr>';
   });
   rows.push('<tr class="row-new-xl">'+
@@ -8477,7 +8486,15 @@ window.xlRenderCxc = function(){
 };
 
 // ── COBRAR / PAGAR CXC/CXP ────────────────────────────────────────
-window.xlCobrarCxc = async function(id, tipo, monto){
+window.xlCobrarCxc = async function(btnOrId, tipoOrMonto, monto){
+  var id, tipo;
+  if(typeof btnOrId === 'object') {
+    id = btnOrId.dataset.id;
+    tipo = btnOrId.dataset.tipo;
+    monto = tipoOrMonto;
+  } else {
+    id = btnOrId; tipo = tipoOrMonto;
+  }
   var cuenta = prompt('¿En qué cuenta entra el dinero?\n\n1 = Caja\n2 = BP Olga\n3 = BP Israel\n4 = BP Andreina');
   var ctaMap={'1':'caja','2':'pichincha-olga','3':'pichincha-israel','4':'pichincha-andreina'};
   var cta = ctaMap[cuenta]||'caja';
